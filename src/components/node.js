@@ -3,9 +3,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {VelocityTransitionGroup} from 'velocity-react';
+import {DragSource, DropTarget} from 'react-dnd';
 
 import Tree from './tree';
 import NodeHeader from './header';
+import ItemTypes from './ItemTypes';
 
 class TreeNode extends React.Component {
     constructor() {
@@ -46,18 +48,18 @@ class TreeNode extends React.Component {
     }
 
     render() {
-        const {style} = this.props;
+        const {style, connectDragSource, connectDropTarget} = this.props;
         const decorators = this.decorators();
         const animations = this.animations();
 
-        return (
+        return connectDropTarget(connectDragSource(
             <li ref={ref => this.topLevelRef = ref}
                 style={style.base}>
                 {this.renderHeader(decorators, animations)}
 
                 {this.renderDrawer(decorators, animations)}
             </li>
-        );
+        ));
     }
 
     renderDrawer(decorators, animations) {
@@ -141,5 +143,62 @@ TreeNode.propTypes = {
     ]).isRequired,
     onToggle: PropTypes.func
 };
+
+const source = {
+    beginDrag(_props, monitor, component) {
+        const { decoratedComponentInstance: { props } } = component;
+        console.log(`beginDrag id:${props.id} key:${props.key}`);
+        return {
+            props,
+            // id: props.id,
+            // // originalIndex: props.findTab(props.id).index,
+            // key: props.tabKey,
+            // originalIndex: props.tabIndex,
+        };
+    },
+
+    endDrag(props, monitor, component) {
+        // const { decoratedComponentInstance: { props } } = component;
+        // const { id: droppedId, originalIndex, key } = monitor.getItem();
+        const didDrop = monitor.didDrop();
+        const item = monitor.getItem();
+
+        // console.log('endDrag');
+
+        if (props.endDrag) {
+            props.endDrag(didDrop, props, item);
+        }
+    }
+};
+
+const target = {
+    canDrop() {
+        console.log('canDrop');
+        return false;
+    },
+
+    drop(props, monitor) {
+        // const { tabKey } = monitor.getItem().props;
+        // props.drop && props.drop(props.tabsKey, tabKey);
+    },
+
+    hover(props, monitor) {
+        // const { tabKey } = monitor.getItem().props;
+        // if (tabKey !== props.tabKey) {
+        //   props.hover && props.hover(tabKey, props.tabKey);
+        // }
+    }
+};
+
+TreeNode = DropTarget(ItemTypes.TREE, target, (connect, monitor) => ({
+    connectDropTarget: connect.dropTarget(),
+    isOver: monitor.isOver(),
+    canDrop: monitor.canDrop()
+}))(TreeNode);
+
+TreeNode = DragSource(ItemTypes.TREE, source, (connect, monitor) => ({
+    connectDragSource: connect.dragSource(),
+    isDragging: monitor.isDragging()
+}))(TreeNode);
 
 export default TreeNode;
