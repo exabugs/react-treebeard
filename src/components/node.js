@@ -3,9 +3,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {VelocityTransitionGroup} from 'velocity-react';
+import {DragSource, DropTarget} from 'react-dnd';
 
 import Tree from './tree';
 import NodeHeader from './header';
+import ItemTypes from './ItemTypes';
 
 class TreeNode extends React.Component {
     constructor() {
@@ -46,18 +48,18 @@ class TreeNode extends React.Component {
     }
 
     render() {
-        const {style} = this.props;
+        const {style, connectDragSource, connectDropTarget, canDrop} = this.props;
         const decorators = this.decorators();
         const animations = this.animations();
 
-        return (
+        return connectDropTarget(connectDragSource(
             <li ref={ref => this.topLevelRef = ref}
-                style={style.base}>
+                style={Object.assign({}, style.base, canDrop && style.canDrop)}>
                 {this.renderHeader(decorators, animations)}
 
                 {this.renderDrawer(decorators, animations)}
             </li>
-        );
+        ));
     }
 
     renderDrawer(decorators, animations) {
@@ -139,7 +141,82 @@ TreeNode.propTypes = {
         PropTypes.object,
         PropTypes.bool
     ]).isRequired,
-    onToggle: PropTypes.func
+    onToggle: PropTypes.func,
+    connectDragSource: PropTypes.func.isRequired,
+    connectDropTarget: PropTypes.func.isRequired,
+    canDrop: PropTypes.bool,
+    onDrop: PropTypes.func
 };
+
+const source = {
+    canDrag(props) {
+        return props.node.active;
+    },
+
+    beginDrag(props) {
+        return {props};
+    }
+
+    // endDrag(props, monitor, component) {
+    //     // const { decoratedComponentInstance: { props } } = component;
+    //     // const { id: droppedId, originalIndex, key } = monitor.getItem();
+    //     const didDrop = monitor.didDrop();
+    //     const item = monitor.getItem();
+    //
+    //     console.log('endDrag');
+    //     console.log(props);
+    //
+    //     if (props.endDrag) {
+    //         props.endDrag(didDrop, props, item);
+    //     }
+    // }
+};
+
+// Check path.
+const startsWith = (_a, _b) => {
+    let a = (_a || '') + '/';
+    let b = (_b || '') + '/';
+    return a.startsWith(b);
+};
+
+// Check name.
+const findNode = (node, name) => node.children.reduce(
+    (found, n) => found || (n.name === name && n), null);
+
+// Check canDrop.
+const checkDrop = (a, b) => !startsWith(a.id, b.id) && !findNode(a, b.name);
+
+const target = {
+    canDrop(props, monitor) {
+        const children = props.node.children !== undefined;
+        const isOver = monitor.isOver({shallow: true});
+        const {node} = monitor.getItem().props;
+        return children && isOver && checkDrop(props.node, node);
+    },
+
+    drop(props, monitor) {
+        console.log('drop');
+        console.log(props);
+        const {node} = monitor.getItem().props;
+        props.onDrop && props.onDrop(props.node, node);
+    }
+
+    // hover(props, monitor) {
+    //     // const { tabKey } = monitor.getItem().props;
+    //     // if (tabKey !== props.tabKey) {
+    //     //   props.hover && props.hover(tabKey, props.tabKey);
+    //     // }
+    // }
+};
+
+TreeNode = DropTarget(ItemTypes.TREE, target, (connect, monitor) => ({
+    connectDropTarget: connect.dropTarget(),
+    canDrop: monitor.canDrop()
+}))(TreeNode);
+
+TreeNode = DragSource(ItemTypes.TREE, source, (connect, monitor) => ({
+    connectDragSource: connect.dragSource(),
+    isDragging: monitor.isDragging()
+}))(TreeNode);
 
 export default TreeNode;

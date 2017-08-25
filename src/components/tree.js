@@ -7,7 +7,7 @@ import TreeNode from './node';
 
 class Tree extends React.Component {
     render() {
-        const {animations, decorators, data, onToggle, style, event, treeRef} = this.props;
+        const {animations, decorators, data, onToggle, style, event, treeRef, onDrop} = this.props;
         const {tree} = style;
 
         return (
@@ -20,6 +20,7 @@ class Tree extends React.Component {
                               key={node.id || index}
                               node={node}
                               onToggle={onToggle}
+                              onDrop={onDrop}
                               style={tree ? tree.node : style}/>
                 )}
             </ul>
@@ -40,7 +41,8 @@ Tree.propTypes = {
     ]).isRequired,
     onToggle: PropTypes.func.isRequired,
     event: PropTypes.object,
-    treeRef: PropTypes.func.isRequired
+    treeRef: PropTypes.func.isRequired,
+    onDrop: PropTypes.func
 };
 
 export default Tree;
