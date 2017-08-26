@@ -13,15 +13,24 @@ class TreeNode extends React.Component {
     constructor() {
         super();
 
-        this.onClick = this.onClick.bind(this);
+        this.onToggle = this.onToggle.bind(this);
+        this.onSelect = this.onSelect.bind(this);
     }
 
-    onClick() {
+    onToggle() {
         const {node, onToggle} = this.props;
         const {toggled} = node;
 
         if (onToggle) {
             onToggle(node, !toggled);
+        }
+    }
+
+    onSelect() {
+        const {node, onSelect} = this.props;
+
+        if (onSelect) {
+            onSelect(node);
         }
     }
 
@@ -87,7 +96,8 @@ class TreeNode extends React.Component {
             <NodeHeader animations={animations}
                         decorators={decorators}
                         node={Object.assign({}, node)}
-                        onClick={this.onClick}
+                        onToggle={this.onToggle}
+                        onSelect={this.onSelect}
                         style={style}/>
         );
     }
@@ -125,10 +135,10 @@ class TreeNode extends React.Component {
     }
 
     _eventBubbles() {
-        const {onToggle} = this.props;
+        const {onSelect} = this.props;
 
         return {
-            onToggle
+            onSelect
         };
     }
 }
@@ -142,6 +152,7 @@ TreeNode.propTypes = {
         PropTypes.bool
     ]).isRequired,
     onToggle: PropTypes.func,
+    onSelect: PropTypes.func,
     connectDragSource: PropTypes.func.isRequired,
     connectDropTarget: PropTypes.func.isRequired,
     canDrop: PropTypes.bool,
