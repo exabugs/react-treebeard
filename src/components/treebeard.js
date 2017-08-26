@@ -36,6 +36,7 @@ TreeBeard.propTypes = {
         PropTypes.bool
     ]),
     onToggle: PropTypes.func,
+    onSelect: PropTypes.func,
     decorators: PropTypes.object
 };
 

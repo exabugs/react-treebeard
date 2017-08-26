@@ -8,17 +8,18 @@ import {VelocityComponent} from 'velocity-react';
 const Loading = ({style}) => {
     return <div style={style}>loading...</div>;
 };
+
 Loading.propTypes = {
     style: PropTypes.object
 };
 
-const Toggle = ({style}) => {
+const Toggle = ({style, onClick}) => {
     const {height, width} = style;
     const midHeight = height * 0.5;
     const points = `0,0 0,${height} ${width},${midHeight}`;
 
     return (
-        <div style={style.base}>
+        <div style={style.base} onClick={onClick}>
             <div style={style.wrapper}>
                 <svg height={height} width={width}>
                     <polygon points={points}
@@ -28,6 +29,7 @@ const Toggle = ({style}) => {
         </div>
     );
 };
+
 Toggle.propTypes = {
     style: PropTypes.object
 };
@@ -41,6 +43,7 @@ const Header = ({node, style}) => {
         </div>
     );
 };
+
 Header.propTypes = {
     style: PropTypes.object,
     node: PropTypes.object.isRequired
@@ -49,10 +52,10 @@ Header.propTypes = {
 @Radium
 class Container extends React.Component {
     render() {
-        const {style, decorators, terminal, onClick, node} = this.props;
+        const {style, decorators, terminal, onSelect, node} = this.props;
 
         return (
-            <div onClick={onClick}
+            <div onClick={onSelect}
                  ref={ref => this.clickableRef = ref}
                  style={style.container}>
                 {!terminal ? this.renderToggle() : null}
@@ -80,16 +83,19 @@ class Container extends React.Component {
     }
 
     renderToggleDecorator() {
-        const {style, decorators} = this.props;
+        const {style, decorators, onToggle} = this.props;
 
-        return <decorators.Toggle style={style.toggle}/>;
+        return <decorators.Toggle style={style.toggle}
+                                  onClick={onToggle}/>;
     }
 }
+
 Container.propTypes = {
     style: PropTypes.object.isRequired,
     decorators: PropTypes.object.isRequired,
     terminal: PropTypes.bool.isRequired,
-    onClick: PropTypes.func.isRequired,
+    onToggle: PropTypes.func.isRequired,
+    onSelect: PropTypes.func.isRequired,
     animations: PropTypes.oneOfType([
         PropTypes.object,
         PropTypes.bool
